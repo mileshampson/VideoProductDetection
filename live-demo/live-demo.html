@@ -1,0 +1,157 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        #results {
+            width: 25%;
+            float: left;
+        }
+        #results img {
+            width: 70%;
+            height: auto;
+            margin: 10%;
+        }
+        #content {
+            width: 75%;
+            float: left;
+            margin: 50px auto;
+        }
+        #captions,
+        #stream {
+            width: 100%;
+            border: 1px solid black;
+            padding: 5px;
+        }
+        #stream {
+        }
+        #captions {
+            overflow-y: auto;
+            max-height: 400px;
+        }
+        .caption {
+            font-size: 30px;
+            padding: 2px;
+            transition: color 5s ease;
+            color: #747474;
+        }
+        .newest {
+            color: red;
+            animation: shake 0.82s cubic-bezier(.36,.07,.19,.97) both;
+            transform: translate3d(0, 0, 0);
+            backface-visibility: hidden;
+            perspective: 1000px;
+        }
+        #captions div:nth-child(odd) {
+            /*background: #CCC*/
+        }
+        #captions div:nth-child(even) {
+            /*background: #FFF*/
+        }
+        @keyframes shake {
+            10%, 90% {
+                transform: translate3d(-1px, 0, 0);
+            }
+
+            20%, 80% {
+                transform: translate3d(2px, 0, 0);
+            }
+
+            30%, 50%, 70% {
+                transform: translate3d(-4px, 0, 0);
+            }
+
+            40%, 60% {
+                transform: translate3d(4px, 0, 0);
+            }
+        }
+    </style>
+    <script src="https://code.jquery.com/jquery-2.2.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/1.4.4/socket.io.min.js"></script>
+</head>
+<body>
+
+<div id="content">
+    <h2>Hackathon's live-demo - Team-V</h2>
+
+    <h3>Stream</h3>
+
+    <img id="stream" src="/stream" />
+
+    <h3>Captions (newest 1st)</h3>
+    <div id="captions"></div>
+</div>
+<div id="results"></div>
+
+<script>
+    var $stream = $('#stream');
+    var $captions = $('#captions');
+    var $results = $('#results');
+    var socket;
+
+    $(function() {
+        $stream.on('load', function () {
+            console.log("stream ready");
+
+            socket = io('http://' + location.host);
+            socket.on('caption', function (data) {
+                $('.caption').removeClass('newest');
+
+                $('<div />')
+                        .addClass('caption newest')
+                        .text(data.caption)
+                        // .css({opacity: 0})
+                        .prependTo($captions)
+                        // .animate({opacity: 1});
+
+
+                search(data.nouns);
+            });
+        });
+    });
+
+    var lastTerms;
+    function search (terms) {
+        terms = terms.join("%20");
+
+        if (lastTerms == terms) {
+            return;
+        }
+        lastTerms = terms;
+
+        var api_key = "Etsy API key here";
+        $.ajax({
+            url: "https://openapi.etsy.com/v2/listings/active.js?keywords=" + terms + "&limit=12&includes=Images:1&api_key=" + api_key,
+            dataType: 'jsonp'
+        }).done(function(data) {
+            var results = [];
+            if (data.ok) {
+                if (data.count > 0) {
+                    data.results.some(function(item, i) {
+                        results.push({
+                            url: item.url,
+                            img: item.Images[0].url_75x75
+                        });
+                        return i > 1;
+                    });
+                }
+            }
+
+            renderSearch(results);
+        })
+    }
+
+    function renderSearch (terms) {
+        $results.empty();
+        terms.forEach(function(term) {
+            $('<a href="' + term.url + '""><img src="' + term.img + '" /></a>')
+                    .prependTo($results);
+        });
+    }
+
+</script>
+</body>
+</html>
+
+
+
