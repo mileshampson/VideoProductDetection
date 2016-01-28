@@ -5,8 +5,6 @@ This uses the https://github.com/karpathy/neuraltalk2 to caption a video stream.
 to output the captions to a file that is read by a nodejs server, which hosts a video stream, captions, and
 provides product recommendations from etsy using the nouns in each caption.
 
-See https://youtu.be/3Zhh6KlAsMw for an example.
-
 Setup:
 
 - Install the neuraltalk2 library and replace videocaptioning.lua with the one included.
